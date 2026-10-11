@@ -1,0 +1,7 @@
+build/
+third_party/
+src/WinBrowser/bin/
+src/WinBrowser/obj/
+*.user
+.vs/
+.vscode/

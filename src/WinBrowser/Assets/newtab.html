@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New Tab</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: grid;
+    place-items: center;
+    background: #1e1e22;
+    color: #ececf1;
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    overflow: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    background:
+      radial-gradient(40% 35% at 30% 30%, rgba(124, 92, 255, .16), transparent 70%),
+      radial-gradient(35% 30% at 72% 68%, rgba(56, 189, 248, .10), transparent 70%);
+    pointer-events: none;
+  }
+  main { position: relative; width: min(560px, 86vw); text-align: center; }
+  .time { font-size: clamp(56px, 9vw, 96px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+  .date { margin-top: 10px; font-size: 15px; color: rgba(236, 236, 241, .5); }
+  form { margin-top: 40px; }
+  input {
+    width: 100%;
+    height: 48px;
+    padding: 0 20px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .05);
+    color: inherit;
+    font: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  input::placeholder { color: rgba(236, 236, 241, .38); }
+  input:focus { border-color: rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .07); }
+</style>
+</head>
+<body>
+<main>
+  <div class="time" id="time"></div>
+  <div class="date" id="date"></div>
+  <form action="https://www.google.com/search" method="get" autocomplete="off">
+    <input name="q" placeholder="Search the web" aria-label="Search the web">
+  </form>
+</main>
+<script>
+  const time = document.getElementById("time");
+  const date = document.getElementById("date");
+  function tick() {
+    const now = new Date();
+    time.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    date.textContent = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
