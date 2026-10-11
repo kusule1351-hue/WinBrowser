@@ -59,3 +59,7 @@ The profile (cookies, cache, `cef.log`) and `session.json` live in `%LOCALAPPDAT
 - Native Chromium windows sit above XAML (the "airspace" limitation), so nothing in WinUI can overlap the page. For that reason the find bar lives in the title strip.
 - The rounded corners on the page come from a window region, so they are not anti-aliased.
 - The default search engine is Google (`Urls.SearchTemplate`).
+
+## License
+
+[MIT](LICENSE). CEF and Chromium, which are downloaded at build time, are distributed under their own BSD-style licenses (see `third_party/cef/LICENSE.txt` and `CREDITS.html`).
