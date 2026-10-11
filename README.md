@@ -1,6 +1,6 @@
 # WinBrowser
 
-A minimal, Arc-inspired browser for Windows: **Chromium (CEF 154)** for the pages and a **WinUI 3** shell with vertical tabs, a Mica backdrop and the standard Windows caption buttons.
+A minimal, Arc-inspired browser for Windows: **Chromium (CEF 154)** for the pages and a **WinUI 3** shell with vertical tabs, a translucent acrylic (glass) backdrop, Lucide icons and the standard Windows caption buttons.
 
 ## Build & run
 
@@ -23,14 +23,22 @@ native/                 C++ (CMake), links libcef + libcef_dll_wrapper (/MT)
 src/WinBrowser/         C# WinUI 3 shell
   MainWindow.xaml(.cs)  sidebar, address pill, vertical tabs, page card, title-bar regions
   Native/CefHost.cs     P/Invoke + unmanaged callbacks
+  Controls/LucideIcon.cs      vector icon control (tinted by Foreground)
+  Controls/LucideIcons.g.cs   generated icon geometry – do not edit
+  Controls/GlassBackdrop.cs   desktop acrylic that stays translucent when inactive
   Shortcuts.cs          keyboard map shared by the shell and the page
   Assets/newtab.html    new-tab page
+assets/                 Lucide SVG icons (ISC, see LICENSE-lucide.txt)
+tools/gen-icons.py      regenerates LucideIcons.g.cs from assets/*.svg
 ```
+
+To use another Lucide icon, drop its SVG into `assets/`, run `python tools/gen-icons.py`, and reference it by file name: `<ui:LucideIcon Symbol="star" />`.
 
 ### How the pieces fit
 
 - CEF runs with `multi_threaded_message_loop`: Chromium owns its own UI thread, and WinUI keeps the main thread. The shell marshals every callback through the `DispatcherQueue`.
 - Each tab is a native Chromium child `HWND` of the WinUI window. It is positioned over the `BrowserHost` card, with rounded corners from `SetWindowRgn`. Inactive tabs are hidden, and restored tabs are created lazily the first time you open them.
+- The window background is `DesktopAcrylicController` with a dark tint (`GlassBackdrop`), so the desktop shows through the sidebar and title strip. It falls back to Mica, then to a solid color.
 - The title bar is extended into the content (`AppWindow.TitleBar.ExtendsContentIntoTitleBar`), so Windows still draws its own minimize, maximize and close buttons. `InputNonClientPointerSource` makes the top strip draggable while leaving the nav buttons and the find bar clickable.
 - Closing a tab destroys only that browser's `HWND` (from `DoClose`). Otherwise CEF would send `WM_CLOSE` to the whole app window. Quitting closes all browsers, then calls `CefShutdown`.
 - Chrome's own command layer is filtered (`OnChromeCommand`): "new tab/window" opens a sidebar tab, and Chrome-only UI such as history, downloads and incognito is blocked, so no stray Chromium windows appear.
@@ -62,4 +70,4 @@ The profile (cookies, cache, `cef.log`) and `session.json` live in `%LOCALAPPDAT
 
 ## License
 
-[MIT](LICENSE). CEF and Chromium, which are downloaded at build time, are distributed under their own BSD-style licenses (see `third_party/cef/LICENSE.txt` and `CREDITS.html`).
+[MIT](LICENSE). Icons are from [Lucide](https://lucide.dev) (ISC, see `assets/LICENSE-lucide.txt`). CEF and Chromium, which are downloaded at build time, are distributed under their own BSD-style licenses (see `third_party/cef/LICENSE.txt` and `CREDITS.html`).

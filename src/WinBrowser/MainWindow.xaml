@@ -4,23 +4,48 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:WinBrowser"
+    xmlns:ui="using:WinBrowser.Controls"
     Title="WinBrowser">
 
-    <Grid x:Name="Root" RequestedTheme="Dark">
+    <Grid x:Name="Root" RequestedTheme="Dark" Background="Transparent">
         <Grid.Resources>
-            <!-- Flat buttons: no grey plate when disabled, soft white wash on hover -->
+            <!-- Flat buttons on glass: no plates, a soft white wash on hover -->
+            <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#0DFFFFFF" />
             <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#33FFFFFF" />
-            <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="SidebarHoverBrush" />
-            <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="SidebarSelectedBrush" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
             <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
             <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#F2FFFFFF" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#F2FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="#B3FFFFFF" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
+            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#40FFFFFF" />
+
+            <Style x:Key="IconButton" TargetType="Button">
+                <Setter Property="Width" Value="32" />
+                <Setter Property="Height" Value="32" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="IsTabStop" Value="False" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <!-- Text boxes that blend into their pill -->
+            <Style x:Key="BareTextBox" TargetType="TextBox">
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="IsSpellCheckEnabled" Value="False" />
+            </Style>
         </Grid.Resources>
+
         <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="SidebarColumn" Width="248" />
+            <ColumnDefinition x:Name="SidebarColumn" Width="260" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -28,27 +53,42 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- ============ Title strip: nav buttons on the left, Windows caption buttons on the right ============ -->
-        <StackPanel x:Name="Toolbar" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="2"
-                    Margin="8,0,0,0" VerticalAlignment="Top" Height="32">
-            <Button x:Name="SidebarToggleButton" Style="{StaticResource GhostIconButton}" Content="&#xE89F;"
-                    Click="SidebarToggle_Click" ToolTipService.ToolTip="Toggle sidebar (Ctrl+S)" AutomationProperties.Name="Toggle sidebar" />
-            <Button x:Name="BackButton" Style="{StaticResource GhostIconButton}" Content="&#xE72B;"
-                    Click="Back_Click" ToolTipService.ToolTip="Back (Alt+Left)" AutomationProperties.Name="Back" />
-            <Button x:Name="ForwardButton" Style="{StaticResource GhostIconButton}" Content="&#xE72A;"
-                    Click="Forward_Click" ToolTipService.ToolTip="Forward (Alt+Right)" AutomationProperties.Name="Forward" />
-            <Button x:Name="ReloadButton" Style="{StaticResource GhostIconButton}" Content="&#xE72C;"
-                    Click="Reload_Click" ToolTipService.ToolTip="Reload (Ctrl+R)" AutomationProperties.Name="Reload" />
-        </StackPanel>
+        <!-- ============ Title strip (Windows draws minimize / maximize / close on the right) ============ -->
+        <Grid x:Name="Toolbar" Grid.ColumnSpan="2" Height="32" Margin="10,0,0,0"
+              HorizontalAlignment="Left" VerticalAlignment="Top" ColumnSpacing="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="SidebarToggleButton" Style="{StaticResource IconButton}" Click="SidebarToggle_Click"
+                    ToolTipService.ToolTip="Toggle sidebar (Ctrl+S)" AutomationProperties.Name="Toggle sidebar">
+                <ui:LucideIcon Symbol="panel-left" />
+            </Button>
+            <Button x:Name="BackButton" Grid.Column="2" Style="{StaticResource IconButton}" Click="Back_Click"
+                    ToolTipService.ToolTip="Back (Alt+Left)" AutomationProperties.Name="Back">
+                <ui:LucideIcon Symbol="arrow-left" />
+            </Button>
+            <Button x:Name="ForwardButton" Grid.Column="3" Style="{StaticResource IconButton}" Click="Forward_Click"
+                    ToolTipService.ToolTip="Forward (Alt+Right)" AutomationProperties.Name="Forward">
+                <ui:LucideIcon Symbol="arrow-right" />
+            </Button>
+            <Button x:Name="ReloadButton" Grid.Column="4" Style="{StaticResource IconButton}" Click="Reload_Click"
+                    ToolTipService.ToolTip="Reload (Ctrl+R)" AutomationProperties.Name="Reload">
+                <ui:LucideIcon x:Name="ReloadIcon" Symbol="rotate-ccw" Size="15" />
+            </Button>
+        </Grid>
 
-        <!-- Find-in-page lives in the title strip because nothing can overlap the native page surface -->
+        <!-- Find-in-page lives in the title strip: nothing can overlap the native page surface -->
         <Border x:Name="FindBar" Grid.Column="1" Visibility="Collapsed"
-                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,3,0,0" Height="28"
-                Background="{StaticResource PillBrush}" CornerRadius="8" Padding="8,0,2,0">
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,2,0,0" Height="30"
+                Background="#14FFFFFF" BorderBrush="#14FFFFFF" BorderThickness="1" CornerRadius="9" Padding="10,0,2,0">
             <StackPanel Orientation="Horizontal" Spacing="2">
-                <FontIcon Glyph="&#xE721;" FontSize="12" Foreground="{StaticResource SidebarSubtleTextBrush}" Margin="0,0,4,0" />
-                <TextBox x:Name="FindBox" Width="200" MinHeight="0" Height="26" Padding="4,3,4,0" FontSize="13"
-                         BorderThickness="0" PlaceholderText="Find in page" Loaded="TextBox_HideClearButton"
+                <ui:LucideIcon Symbol="search" Size="13" Foreground="#80FFFFFF" VerticalAlignment="Center" />
+                <TextBox x:Name="FindBox" Style="{StaticResource BareTextBox}" Width="210" Height="28" Padding="8,5,4,0"
+                         PlaceholderText="Find in page" Loaded="TextBox_HideClearButton"
                          TextChanged="FindBox_TextChanged" KeyDown="FindBox_KeyDown">
                     <TextBox.Resources>
                         <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
@@ -59,37 +99,45 @@
                         <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
                     </TextBox.Resources>
                 </TextBox>
-                <Button Style="{StaticResource GhostIconButton}" Width="26" Height="26" FontSize="10" Content="&#xE70E;"
-                        Click="FindPrev_Click" ToolTipService.ToolTip="Previous (Shift+Enter)" AutomationProperties.Name="Previous match" />
-                <Button Style="{StaticResource GhostIconButton}" Width="26" Height="26" FontSize="10" Content="&#xE70D;"
-                        Click="FindNext_Click" ToolTipService.ToolTip="Next (Enter)" AutomationProperties.Name="Next match" />
-                <Button Style="{StaticResource GhostIconButton}" Width="26" Height="26" FontSize="10" Content="&#xE8BB;"
-                        Click="FindClose_Click" ToolTipService.ToolTip="Close (Esc)" AutomationProperties.Name="Close find" />
+                <Button Style="{StaticResource IconButton}" Width="26" Height="26" CornerRadius="7" Click="FindPrev_Click"
+                        ToolTipService.ToolTip="Previous (Shift+Enter)" AutomationProperties.Name="Previous match">
+                    <ui:LucideIcon Symbol="chevron-left" Size="14" />
+                </Button>
+                <Button Style="{StaticResource IconButton}" Width="26" Height="26" CornerRadius="7" Click="FindNext_Click"
+                        ToolTipService.ToolTip="Next (Enter)" AutomationProperties.Name="Next match">
+                    <ui:LucideIcon Symbol="chevron-right" Size="14" />
+                </Button>
+                <Button Style="{StaticResource IconButton}" Width="26" Height="26" CornerRadius="7" Click="FindClose_Click"
+                        ToolTipService.ToolTip="Close (Esc)" AutomationProperties.Name="Close find">
+                    <ui:LucideIcon Symbol="x" Size="13" />
+                </Button>
             </StackPanel>
         </Border>
 
         <!-- ============ Sidebar ============ -->
-        <Grid x:Name="Sidebar" Grid.Row="1" Padding="8,0,8,8" RowSpacing="0">
+        <Grid x:Name="Sidebar" Grid.Row="1" Padding="10,0,8,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Address pill -->
-            <Border x:Name="AddressPill" Height="38" CornerRadius="10" Background="{StaticResource PillBrush}"
-                    Padding="10,0,4,0">
-                <Grid ColumnSpacing="6">
+            <Border x:Name="AddressPill" Height="40" CornerRadius="12" Background="#0FFFFFFF"
+                    BorderBrush="#0AFFFFFF" BorderThickness="1" Padding="12,0,4,0"
+                    PointerEntered="AddressPill_PointerEntered" PointerExited="AddressPill_PointerExited">
+                <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <FontIcon x:Name="SecurityIcon" Glyph="&#xE72E;" FontSize="11"
-                              Foreground="{StaticResource SidebarSubtleTextBrush}" />
-                    <TextBox x:Name="AddressBox" Grid.Column="1" BorderThickness="0" MinHeight="0" Height="32"
-                             Padding="0,6,0,0" FontSize="13" VerticalAlignment="Center"
-                             PlaceholderText="Search or enter URL" IsSpellCheckEnabled="False" Loaded="TextBox_HideClearButton"
+                    <Image x:Name="AddressFavicon" Width="14" Height="14" Visibility="Collapsed" />
+                    <ui:LucideIcon x:Name="AddressIcon" Symbol="search" Size="14" Foreground="#80FFFFFF" />
+                    <TextBox x:Name="AddressBox" Grid.Column="1" Style="{StaticResource BareTextBox}" Height="34"
+                             Padding="0,8,0,0" PlaceholderText="Search or enter URL" Loaded="TextBox_HideClearButton"
                              GotFocus="AddressBox_GotFocus" LostFocus="AddressBox_LostFocus" KeyDown="AddressBox_KeyDown">
                         <TextBox.Resources>
                             <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
@@ -99,48 +147,57 @@
                             <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
                             <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
                             <SolidColorBrush x:Key="TextControlForeground" Color="#E6FFFFFF" />
-                            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#E6FFFFFF" />
+                            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#F2FFFFFF" />
                             <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#FFFFFFFF" />
-                            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#73FFFFFF" />
-                            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#73FFFFFF" />
-                            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#73FFFFFF" />
+                            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#66FFFFFF" />
+                            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#66FFFFFF" />
+                            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#66FFFFFF" />
+                            <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#665B8CFF" />
                         </TextBox.Resources>
                     </TextBox>
-                    <Button x:Name="CopyLinkButton" Grid.Column="2" Style="{StaticResource GhostIconButton}"
-                            Width="28" Height="28" FontSize="12" Content="&#xE71B;"
-                            Click="CopyLink_Click" ToolTipService.ToolTip="Copy link (Ctrl+Shift+C)" AutomationProperties.Name="Copy link" />
+                    <Button x:Name="CopyLinkButton" Grid.Column="2" Style="{StaticResource IconButton}"
+                            Width="30" Height="30" Opacity="0" Click="CopyLink_Click"
+                            ToolTipService.ToolTip="Copy link (Ctrl+Shift+C)" AutomationProperties.Name="Copy link">
+                        <ui:LucideIcon x:Name="CopyLinkIcon" Symbol="share" Size="14" />
+                    </Button>
                 </Grid>
             </Border>
 
             <!-- New tab -->
-            <Button x:Name="NewTabButton" Grid.Row="1" Margin="0,14,0,4" HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Left" Height="36" Padding="10,0" CornerRadius="8"
-                    Background="Transparent" BorderThickness="0" Click="NewTab_Click" IsTabStop="False" AutomationProperties.Name="New Tab">
+            <Button x:Name="NewTabButton" Grid.Row="1" Margin="0,12,0,0" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" Height="36" Padding="12,0" CornerRadius="10"
+                    BorderThickness="0" Click="NewTab_Click" IsTabStop="False" AutomationProperties.Name="New Tab">
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <FontIcon Glyph="&#xE710;" FontSize="12" Foreground="{StaticResource SidebarSubtleTextBrush}" />
-                    <TextBlock Text="New Tab" FontSize="13" Foreground="{StaticResource SidebarSubtleTextBrush}" />
+                    <ui:LucideIcon Symbol="plus" Size="15" />
+                    <TextBlock Text="New Tab" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
 
+            <Rectangle Grid.Row="2" Height="1" Margin="12,8,12,6" Fill="#14FFFFFF" />
+
             <!-- Vertical tabs -->
-            <ListView x:Name="TabList" Grid.Row="2" SelectionMode="Single"
-                      CanReorderItems="True" CanDragItems="True" AllowDrop="True"
-                      SelectionChanged="TabList_SelectionChanged" Padding="0" IsTabStop="False">
+            <ListView x:Name="TabList" Grid.Row="3" SelectionMode="Single" Padding="0"
+                      CanReorderItems="True" CanDragItems="True" AllowDrop="True" IsTabStop="False"
+                      SelectionChanged="TabList_SelectionChanged">
                 <ListView.Resources>
                     <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">False</x:Boolean>
-                    <StaticResource x:Key="ListViewItemBackgroundPointerOver" ResourceKey="SidebarHoverBrush" />
-                    <StaticResource x:Key="ListViewItemBackgroundPressed" ResourceKey="SidebarHoverBrush" />
-                    <StaticResource x:Key="ListViewItemBackgroundSelected" ResourceKey="SidebarSelectedBrush" />
-                    <StaticResource x:Key="ListViewItemBackgroundSelectedPointerOver" ResourceKey="SidebarSelectedBrush" />
-                    <StaticResource x:Key="ListViewItemBackgroundSelectedPressed" ResourceKey="SidebarSelectedBrush" />
+                    <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="#0AFFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="#1FFFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="#26FFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="#1AFFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemForeground" Color="#B3FFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="#E6FFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="#FFFFFFFF" />
                 </ListView.Resources>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-                        <Setter Property="MinHeight" Value="36" />
-                        <Setter Property="Height" Value="36" />
-                        <Setter Property="Padding" Value="10,0,4,0" />
+                        <Setter Property="MinHeight" Value="38" />
+                        <Setter Property="Height" Value="38" />
+                        <Setter Property="Padding" Value="12,0,5,0" />
                         <Setter Property="Margin" Value="0,1" />
-                        <Setter Property="CornerRadius" Value="8" />
+                        <Setter Property="CornerRadius" Value="10" />
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     </Style>
                 </ListView.ItemContainerStyle>
@@ -154,27 +211,58 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE774;" FontSize="13" Foreground="{StaticResource SidebarSubtleTextBrush}"
-                                      Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
+                            <ui:LucideIcon Symbol="globe" Size="15" Foreground="#80FFFFFF"
+                                           Visibility="{x:Bind GlyphVisibility, Mode=OneWay}" />
                             <Image Width="16" Height="16" Source="{x:Bind Favicon, Mode=OneWay}"
                                    Visibility="{x:Bind FaviconVisibility, Mode=OneWay}" />
-                            <ProgressRing Width="14" Height="14" MinWidth="0" MinHeight="0" IsActive="{x:Bind IsLoading, Mode=OneWay}"
+                            <ProgressRing Width="14" Height="14" MinWidth="0" MinHeight="0" Foreground="#CCFFFFFF"
+                                          IsActive="{x:Bind IsLoading, Mode=OneWay}"
                                           Visibility="{x:Bind SpinnerVisibility, Mode=OneWay}" />
                             <TextBlock Grid.Column="1" Text="{x:Bind DisplayTitle, Mode=OneWay}" FontSize="13"
-                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                                       Foreground="{StaticResource SidebarTextBrush}" />
-                            <Button Grid.Column="2" Style="{StaticResource GhostIconButton}" Width="24" Height="24"
-                                    FontSize="9" CornerRadius="6" Content="&#xE8BB;" Tag="{x:Bind}"
-                                    Opacity="{x:Bind CloseButtonOpacity, Mode=OneWay}" Click="CloseTab_Click"
-                                    ToolTipService.ToolTip="Close tab (Ctrl+W)" AutomationProperties.Name="Close tab" />
+                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <Button Grid.Column="2" Style="{StaticResource IconButton}" Width="24" Height="24"
+                                    CornerRadius="7" Tag="{x:Bind}" Click="CloseTab_Click"
+                                    Opacity="{x:Bind CloseButtonOpacity, Mode=OneWay}"
+                                    ToolTipService.ToolTip="Close tab (Ctrl+W)" AutomationProperties.Name="Close tab">
+                                <ui:LucideIcon Symbol="x" Size="13" />
+                            </Button>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+
+            <!-- Bottom bar -->
+            <Grid Grid.Row="4" Margin="2,6,0,0">
+                <Button x:Name="DownloadsButton" Style="{StaticResource IconButton}" HorizontalAlignment="Left"
+                        Click="Downloads_Click" ToolTipService.ToolTip="Downloads folder"
+                        AutomationProperties.Name="Downloads">
+                    <ui:LucideIcon Symbol="download" />
+                </Button>
+                <Button x:Name="MenuButton" Style="{StaticResource IconButton}" HorizontalAlignment="Right"
+                        ToolTipService.ToolTip="More" AutomationProperties.Name="More">
+                    <ui:LucideIcon Symbol="ellipsis" />
+                    <Button.Flyout>
+                        <MenuFlyout Placement="TopEdgeAlignedRight" ShouldConstrainToRootBounds="False">
+                            <MenuFlyoutItem Text="New tab" KeyboardAcceleratorTextOverride="Ctrl+T" Tag="NewTab" Click="Menu_Click" />
+                            <MenuFlyoutItem Text="Reopen closed tab" KeyboardAcceleratorTextOverride="Ctrl+Shift+T" Tag="ReopenClosedTab" Click="Menu_Click" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Find in page" KeyboardAcceleratorTextOverride="Ctrl+F" Tag="Find" Click="Menu_Click" />
+                            <MenuFlyoutItem Text="Zoom in" KeyboardAcceleratorTextOverride="Ctrl++" Tag="ZoomIn" Click="Menu_Click" />
+                            <MenuFlyoutItem Text="Zoom out" KeyboardAcceleratorTextOverride="Ctrl+-" Tag="ZoomOut" Click="Menu_Click" />
+                            <MenuFlyoutItem Text="Actual size" KeyboardAcceleratorTextOverride="Ctrl+0" Tag="ZoomReset" Click="Menu_Click" />
+                            <MenuFlyoutItem Text="Print…" KeyboardAcceleratorTextOverride="Ctrl+P" Tag="Print" Click="Menu_Click" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Full screen" KeyboardAcceleratorTextOverride="F11" Tag="ToggleFullscreen" Click="Menu_Click" />
+                            <MenuFlyoutItem Text="Developer tools" KeyboardAcceleratorTextOverride="F12" Tag="DevTools" Click="Menu_Click" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+            </Grid>
         </Grid>
 
-        <!-- ============ Page surface: the native Chromium window is positioned over this card ============ -->
-        <Border x:Name="BrowserHost" Grid.Row="1" Grid.Column="1" Margin="0,0,8,8" CornerRadius="8"
+        <!-- ============ Page card: the native Chromium window sits inside its 1px hairline ============ -->
+        <Border x:Name="BrowserHost" Grid.Row="1" Grid.Column="1" Margin="0,0,10,10" CornerRadius="10"
+                BorderBrush="#1FFFFFFF" BorderThickness="1"
                 Background="{StaticResource ContentPlaceholderBrush}" SizeChanged="BrowserHost_SizeChanged" />
     </Grid>
 </Window>

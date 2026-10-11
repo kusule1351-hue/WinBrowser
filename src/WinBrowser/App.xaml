@@ -10,28 +10,8 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Minimal palette -->
-            <SolidColorBrush x:Key="SidebarTextBrush" Color="#E6FFFFFF" />
-            <SolidColorBrush x:Key="SidebarSubtleTextBrush" Color="#8CFFFFFF" />
-            <SolidColorBrush x:Key="SidebarHoverBrush" Color="#14FFFFFF" />
-            <SolidColorBrush x:Key="SidebarSelectedBrush" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="PillBrush" Color="#12FFFFFF" />
-            <SolidColorBrush x:Key="HairlineBrush" Color="#14FFFFFF" />
-            <SolidColorBrush x:Key="ContentPlaceholderBrush" Color="#FF1E1E22" />
-
-            <!-- Borderless icon button used in the title bar and sidebar -->
-            <Style x:Key="GhostIconButton" TargetType="Button">
-                <Setter Property="Width" Value="32" />
-                <Setter Property="Height" Value="32" />
-                <Setter Property="Padding" Value="0" />
-                <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="Background" Value="Transparent" />
-                <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="Foreground" Value="{StaticResource SidebarSubtleTextBrush}" />
-                <Setter Property="FontFamily" Value="{ThemeResource SymbolThemeFontFamily}" />
-                <Setter Property="FontSize" Value="13" />
-                <Setter Property="IsTabStop" Value="False" />
-            </Style>
+            <!-- Shown behind a tab until Chromium paints; matches the new-tab page and CEF's background. -->
+            <SolidColorBrush x:Key="ContentPlaceholderBrush" Color="#FF1C1C21" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

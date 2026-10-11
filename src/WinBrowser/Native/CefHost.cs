@@ -78,7 +78,7 @@ public static unsafe partial class CefHost
         try
         {
             // Matches the content placeholder colour so new tabs don't flash white.
-            return wb_initialize(&callbacks, helper, cache, 0xFF1E1E22) != 0;
+            return wb_initialize(&callbacks, helper, cache, 0xFF1C1C21) != 0;
         }
         catch (DllNotFoundException)
         {

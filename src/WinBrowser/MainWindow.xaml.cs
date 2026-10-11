@@ -15,6 +15,7 @@ using Windows.Graphics;
 using VirtualKey = Windows.System.VirtualKey;
 using Windows.UI;
 using CoreVirtualKeyStates = Windows.UI.Core.CoreVirtualKeyStates;
+using WinBrowser.Controls;
 using WinBrowser.Native;
 using WinRT.Interop;
 
@@ -22,9 +23,11 @@ namespace WinBrowser;
 
 public sealed partial class MainWindow : Window, ICefHostEvents
 {
-    private const double SidebarWidth = 248;
+    private const double SidebarWidth = 260;
     private const double TitleBarHeight = 40;
-    private const double PageCornerRadius = 8;
+    private const double PageCornerRadius = 10;
+    private const double PageBorder = 1;
+    private const double PageGap = 10;
 
     private readonly ObservableCollection<BrowserTab> _tabs = [];
     private readonly Dictionary<int, BrowserTab> _byId = [];
@@ -41,6 +44,7 @@ public sealed partial class MainWindow : Window, ICefHostEvents
     private bool _syncingSelection;
     private bool _shuttingDown;
     private bool _readyToClose;
+    private bool _pointerOverAddress;
 
     public MainWindow(string? startUrl)
     {
@@ -88,7 +92,10 @@ public sealed partial class MainWindow : Window, ICefHostEvents
         var icon = Path.Combine(AppContext.BaseDirectory, "Assets", "WinBrowser.ico");
         if (File.Exists(icon)) AppWindow.SetIcon(icon);
 
-        if (MicaController.IsSupported())
+        // Translucent glass behind the chrome; Mica / solid as fallbacks.
+        if (GlassBackdrop.IsSupported)
+            SystemBackdrop = new GlassBackdrop();
+        else if (MicaController.IsSupported())
             SystemBackdrop = new MicaBackdrop { Kind = MicaKind.BaseAlt };
         else
             Root.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x1B, 0x1B, 0x1F));
@@ -115,7 +122,7 @@ public sealed partial class MainWindow : Window, ICefHostEvents
             UpdateTitleBarRegions();
             UpdateBrowserBounds();
         };
-        UpdateTitleBarRegions();
+        ApplyLayout();
         RestoreSession();
     }
 
@@ -153,11 +160,19 @@ public sealed partial class MainWindow : Window, ICefHostEvents
     // Page surface
     // =====================================================================================
 
-    private RectInt32 BrowserRect() =>
-        Root.XamlRoot is null ? default : ToPixels(BrowserHost, Root.XamlRoot.RasterizationScale);
+    /// <summary>The page card in physical pixels, inside its hairline border.</summary>
+    private RectInt32 BrowserRect()
+    {
+        if (Root.XamlRoot is null) return default;
+        double scale = Root.XamlRoot.RasterizationScale;
+        var r = ToPixels(BrowserHost, scale);
+        int inset = _fullscreen ? 0 : (int)Math.Round(PageBorder * scale);
+        return new RectInt32(r.X + inset, r.Y + inset, Math.Max(0, r.Width - 2 * inset), Math.Max(0, r.Height - 2 * inset));
+    }
 
     private int CornerRadiusPx =>
-        _fullscreen || Root.XamlRoot is null ? 0 : (int)Math.Round(PageCornerRadius * Root.XamlRoot.RasterizationScale);
+        _fullscreen || Root.XamlRoot is null ? 0
+        : (int)Math.Round((PageCornerRadius - PageBorder) * Root.XamlRoot.RasterizationScale);
 
     private void UpdateBrowserBounds()
     {
@@ -211,7 +226,9 @@ public sealed partial class MainWindow : Window, ICefHostEvents
     private void ActivateTab(BrowserTab tab, bool focusPage = true)
     {
         var previous = _active;
+        if (previous != null) previous.PropertyChanged -= ActiveTab_PropertyChanged;
         _active = tab;
+        tab.PropertyChanged += ActiveTab_PropertyChanged;
         EnsureCreated(tab);
 
         if (previous != tab)
@@ -323,7 +340,8 @@ public sealed partial class MainWindow : Window, ICefHostEvents
         var tab = _active;
         BackButton.IsEnabled = tab?.CanGoBack == true;
         ForwardButton.IsEnabled = tab?.CanGoForward == true;
-        ReloadButton.Content = tab?.IsLoading == true ? "" : "";
+        ReloadIcon.Symbol = tab?.IsLoading == true ? "x" : "rotate-ccw";
+        ToolTipService.SetToolTip(ReloadButton, tab?.IsLoading == true ? "Stop (Esc)" : "Reload (Ctrl+R)");
         AppWindow.Title = tab is null ? "WinBrowser" : $"{tab.DisplayTitle} – WinBrowser";
         UpdateAddressDisplay();
     }
@@ -332,7 +350,12 @@ public sealed partial class MainWindow : Window, ICefHostEvents
     {
         var url = _active?.Url;
         bool newTab = _active?.IsNewTabPage ?? true;
-        SecurityIcon.Glyph = newTab ? "" : Urls.IsSecure(url) ? "" : "";
+        // Site favicon for secure pages, a warning for plain http, a search glyph on the new-tab page.
+        bool showFavicon = !newTab && Urls.IsSecure(url) && _active?.Favicon != null;
+        AddressFavicon.Source = showFavicon ? _active!.Favicon : null;
+        AddressFavicon.Visibility = showFavicon ? Visibility.Visible : Visibility.Collapsed;
+        AddressIcon.Visibility = showFavicon ? Visibility.Collapsed : Visibility.Visible;
+        AddressIcon.Symbol = newTab ? "search" : Urls.IsSecure(url) ? "globe" : "triangle-alert";
         CopyLinkButton.Visibility = newTab ? Visibility.Collapsed : Visibility.Visible;
         if (!_editingAddress) AddressBox.Text = Urls.DisplayHost(url);
     }
@@ -423,9 +446,42 @@ public sealed partial class MainWindow : Window, ICefHostEvents
         package.SetText(_active.Url);
         Clipboard.SetContent(package);
 
-        CopyLinkButton.Content = "";
+        CopyLinkIcon.Symbol = "check";
+        CopyLinkButton.Opacity = 1;
         await Task.Delay(1200);
-        CopyLinkButton.Content = "";
+        CopyLinkIcon.Symbol = "share";
+        CopyLinkButton.Opacity = _pointerOverAddress ? 1 : 0;
+    }
+
+    private void ActiveTab_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(BrowserTab.Favicon) && sender == _active) UpdateAddressDisplay();
+    }
+
+    private void AddressPill_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _pointerOverAddress = true;
+        CopyLinkButton.Opacity = 1;
+        AddressPill.Background = new SolidColorBrush(Color.FromArgb(0x17, 0xFF, 0xFF, 0xFF));
+    }
+
+    private void AddressPill_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _pointerOverAddress = false;
+        CopyLinkButton.Opacity = 0;
+        AddressPill.Background = new SolidColorBrush(Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF));
+    }
+
+    private void Downloads_Click(object sender, RoutedEventArgs e)
+    {
+        var downloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{downloads}\"") { UseShellExecute = true });
+    }
+
+    private void Menu_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is string name && Enum.TryParse<BrowserCommand>(name, out var command))
+            Execute(command);
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => Execute(BrowserCommand.Back);
@@ -453,9 +509,11 @@ public sealed partial class MainWindow : Window, ICefHostEvents
         Sidebar.Visibility = showSidebar ? Visibility.Visible : Visibility.Collapsed;
         TitleRow.Height = new GridLength(_fullscreen ? 0 : TitleBarHeight);
         Toolbar.Visibility = _fullscreen ? Visibility.Collapsed : Visibility.Visible;
-        BrowserHost.Margin = _fullscreen ? new Thickness(0) : new Thickness(showSidebar ? 0 : 8, 0, 8, 8);
+        BrowserHost.Margin = _fullscreen ? new Thickness(0) : new Thickness(showSidebar ? 0 : PageGap, 0, PageGap, PageGap);
+        BrowserHost.BorderThickness = new Thickness(_fullscreen ? 0 : PageBorder);
+        // With the sidebar open the nav buttons line up with its right edge (Arc-style).
+        Toolbar.Width = showSidebar ? SidebarWidth - 18 : double.NaN;
         BrowserHost.CornerRadius = new CornerRadius(_fullscreen ? 0 : PageCornerRadius);
-        SidebarToggleButton.Content = showSidebar ? "" : "";
 
         Root.UpdateLayout();
         UpdateBrowserBounds();
